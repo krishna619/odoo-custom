@@ -17,12 +17,12 @@ _logger = logging.getLogger(__name__)
 class ResPartnerInherited(models.Model):
     _inherit = 'res.partner'
 
-    def name_get(self):
-        result = []
-
-        for rec in self:
-            result.append((rec.id, '%s - %s' % (rec.gstn, rec.state_id.name)))
-        return result
+    # def name_get(self):
+    #     result = []
+    #
+    #     for rec in self:
+    #         result.append((rec.id, '%s - %s' % (rec.gstn, rec.state_id.name)))
+    #     return result
 
 
 
@@ -107,7 +107,7 @@ class SaleOrderInherit(models.Model):
 
     @api.model
     def _get_default_godowns(self):
-        godown = self.env['jobsite.godown'].search([('id', 'in', self.jobsite_id.godown_ids)]).name
+        godown = self.env['jobsite.godown'].search([('id', 'in', self.jobsite_id.godown_id)]).name
         return godown
 
     #jobsite_godowns = fields.Boolean(related='jobsite_id.godown_ids', store=False)
@@ -243,6 +243,14 @@ class SaleOrderInherit(models.Model):
             self.delivery_state_id = self.jobsite_id.state_id
             self.delivery_country_id = self.jobsite_id.country_id
             self.delivery_zip = self.jobsite_id.zip
+            self.godown = self.jobsite_id.godown_id
+
+    # @api.onchange('jobsite_id')
+    # def get_godown(self):
+    #     if self.jobsite_id:
+    #         self.godown = self.jobsite_id.godown_id
+
+
 
     @api.onchange('partner_id')
     def clear_customer_branch(self):
@@ -373,7 +381,7 @@ class SaleOrderLineInherit(models.Model):
         unit_price = self.env['product.product'].search([('id', '=', product_id.id)], limit=1).list_price
         current_price = self.price_unit
         if current_price < unit_price:
-            self.price_unit = self._origin.price_unit
+            self.price_unit = unit_price
             return {
                 'warning': {'title': 'Warning',
                             'message': 'Current Price < Unit Price', },
